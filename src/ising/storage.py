@@ -23,8 +23,6 @@ from typing import Iterator
 
 import h5py
 
-from ising.metropolis_1d import Sim1DResult
-
 T_FMT = "{:.4f}"
 
 
@@ -58,12 +56,17 @@ def write_samples(
     h5_path: os.PathLike | str,
     dim: int,
     L: int,
-    result: Sim1DResult,
+    result,
     *,
-    algorithm: str = "metropolis",
+    algorithm: str | None = None,
     overwrite: bool = False,
 ) -> str:
-    """Write a single (dim, L, T) block to the HDF5 file. Returns the group path."""
+    """Write a single (dim, L, T) block to the HDF5 file. Returns the group path.
+
+    `result` is any object with .configurations (N, *spatial) int8, .energies,
+    .magnetizations, .T, .seed, .n_thermalization, .decorrelation, and optionally
+    .algorithm. The `algorithm` kwarg overrides result.algorithm if both exist.
+    """
     path = Path(h5_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -95,7 +98,7 @@ def write_samples(
         g.attrs["L"] = int(L)
         g.attrs["dim"] = int(dim)
         g.attrs["seed"] = int(result.seed)
-        g.attrs["algorithm"] = algorithm
+        g.attrs["algorithm"] = algorithm or getattr(result, "algorithm", "unknown")
         g.attrs["n_thermalization"] = int(result.n_thermalization)
         g.attrs["decorrelation"] = int(result.decorrelation)
         g.attrs["n_samples"] = int(result.configurations.shape[0])
