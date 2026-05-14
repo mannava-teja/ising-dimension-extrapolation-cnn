@@ -216,3 +216,19 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project: generated data and model artifacts (large, not for git)
+data/*
+!data/.gitkeep
+models/*
+!models/.gitkeep
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.ckpt
+
+# Reports / figures output
+reports/figures/
+reports/*.pdf
+
