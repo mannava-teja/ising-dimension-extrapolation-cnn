@@ -134,6 +134,8 @@ def main() -> int:
     results.append(("1D", audit_file(data_dir / "ising_1d.h5", dim=1)))
     print()
     results.append(("2D", audit_file(data_dir / "ising_2d.h5", dim=2)))
+    print()
+    results.append(("3D", audit_file(data_dir / "ising_3d.h5", dim=3)))
 
     print()
     print("=" * 78)
