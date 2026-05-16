@@ -1,78 +1,122 @@
 # ising-dimension-extrapolation-cnn
 
-A CNN trained on Ising-model Monte Carlo configurations in 1D, 2D, and 3D,
-tested on whether it can extrapolate to **4D** — a dimension it never saw
-during training. 4D is the upper critical dimension of the Ising universality
-class, where mean-field theory becomes exact (modulo logarithmic corrections),
-making it a stringent test of whether a network can generalize physics
-across dimensions.
+**Does a neural network learn the universal structure of phase transitions
+well enough to extrapolate across spatial dimension?**
 
-## Background
+This project tests that question on the Ising model. A convolutional network
+is trained on Monte Carlo configurations from dimensions *d* = 1, 2, 3 and
+evaluated on *d* = 4 — a dimension it never sees during training. Because
+*d* = 4 is the **upper critical dimension** of the Ising universality class,
+the theory makes an exact, non-trivial prediction there: critical exponents
+stop running with dimension and collapse to mean-field values. That makes 4D
+a *falsifiable* test — the network can be measurably right or wrong against a
+known answer.
 
-Spins `s_i ∈ {-1, +1}` sit on the sites of a regular lattice. The Hamiltonian
-`H = -J Σ_⟨ij⟩ s_i s_j` couples nearest neighbors. Configurations follow
-`p(s) ∝ exp(-H/kT)`. Throughout: `J = 1`, `k_B = 1`, periodic boundaries.
+## Why this is a physics question, not just a machine-learning demo
 
-| d | T_c | Transition |
-|---|----:|------------|
-| 1 | 0 | None |
-| 2 | 2.2692 | Exact (Onsager 1944) |
-| 3 | 4.5115 | MC-numerics (Ferrenberg & Landau 1991) |
-| 4 | ≈ 6.68 | Upper critical dimension; mean-field + log corrections |
+The renormalization group says critical phenomena are governed by universal
+features independent of microscopic detail. But the universality *class*
+itself depends on spatial dimension — the critical exponents run with *d*
+until *d* = 4, where they freeze at mean-field values:
 
-The interesting feature: 4D is exactly where the model's behavior crosses
-over from non-trivial critical exponents to mean-field exponents. If a
-network trained on d=1,2,3 can recognize the d=4 transition, that's
-evidence the network has learned features that transcend the spatial
-structure of each dimension.
+| d | T_c | β | γ | ν | Character |
+|---|----:|----:|----:|----:|-----------|
+| 1 | 0 | — | — | — | No transition |
+| 2 | 2.2692 | 0.125 | 1.75 | 1 | Onsager-exact, non-trivial |
+| 3 | 4.5115 | 0.326 | 1.237 | 0.630 | Non-trivial, MC-numerics |
+| 4 | ≈ 6.68 | 0.5 | 1 | 0.5 | **Upper critical dimension — mean-field + log corrections** |
 
-Monte Carlo sampling uses both **Wolff cluster updates** (near and below T_c,
-where they defeat critical slowing down) and **Metropolis-Hastings** (above
-T_c, where cluster size is O(1) and Wolff is inefficient). Per-block metadata
-records which algorithm produced each block.
+A network that reproduces a known T_c in a *single* dimension is a solved
+problem (Carrasquilla & Melko, *Nature Physics* 2017). The open question — and
+the contribution this project targets — is whether a network learns a
+representation of criticality *universal enough to transfer across dimension*,
+and whether, extrapolating to *d* = 4, it reproduces the signature of the
+upper critical dimension. A correct extrapolation is data-driven evidence that
+the network has internalized the renormalization-group structure of the
+problem; an incorrect one is an informative limit on machine-learned physics.
+
+## What the project measures
+
+Each measurement has a *known correct answer*, so the result is a verifiable
+yes/no rather than an unfalsifiable number:
+
+1. **Extrapolated transition temperature** `T_c(4D)` — ground truth 6.68
+   (Lundow & Markström 2009).
+2. **Critical exponent `ν(4D)`**, extracted from how sharply the network's
+   order/disorder prediction crossover narrows with lattice size
+   (`width ∝ L^{-1/ν}`, an established finite-size-scaling technique) —
+   ground truth, mean-field 1/2, having only trained on `ν(2D)=1` and
+   `ν(3D)=0.63`.
+3. **Upper-critical-dimension signature** — whether the network's latent
+   representation flags *d* = 4 as the crossover where exponents stop running,
+   without being told.
+4. **Dimensional universality collapse** — whether critical configurations
+   from every dimension map onto a common manifold in the network's feature
+   space, a data-driven picture of universality.
+
+The 4D dataset is generated, validated against literature, and then **sealed
+as a held-out test set** — it is never used to train or tune the network.
 
 ## Datasets
 
-| d | Configurations | Sizes × Temps | T_c estimate from Binder crossings | Reference |
+Monte Carlo configurations for *d* = 1, 2, 3, validated against exact or
+literature physics before any network sees them. Sampling uses **Wolff cluster
+updates** near and below `T_c` (where they defeat critical slowing down) and
+**Metropolis-Hastings** above `T_c` (where clusters are O(1) and Wolff is
+inefficient); per-block metadata records which algorithm produced each block.
+
+| d | Configurations | Sizes × Temps | T_c from Binder crossings | Validated against |
 |---|---:|---|---|---|
-| 1 |  90,000 | 3 × 30 | n/a (no transition) | exact `-tanh(1/T)` |
-| 2 | 160,000 | 4 × 40 | **2.2543** (vs 2.2692, 0.7% off) | Onsager |
-| 3 | 120,000 | 3 × 40 | **4.5132** (vs 4.5115, 0.04% off) | Ferrenberg–Landau / Talapov–Blöte / Hasenbusch |
+| 1 |  90,000 | 3 × 30 | n/a (no transition) | exact `⟨E⟩/N = -tanh(1/T)` |
+| 2 | 160,000 | 4 × 40 | **2.2543** (vs 2.2692, 0.7% off) | Onsager exact solution |
+| 3 | 120,000 | 3 × 40 | **4.5132** (vs 4.5115, 0.04% off) | Ferrenberg–Landau, Talapov–Blöte, Hasenbusch |
 
-All three datasets pass:
+All three datasets pass a cross-dimensional audit: bit-exact storage integrity,
+`int8` configurations with values exactly `{-1, +1}`, periodic-boundary
+translation invariance on every axis, an energy convention identical across
+dimensions (`H = -Σ_⟨ij⟩ s_i s_j`, each bond counted once), effective
+independent sample size > 100 in every block, and Z₂ symmetry in the
+paramagnetic phase. Multiple lattice sizes per dimension is deliberate — it is
+exactly what the finite-size-scaling exponent extraction (measurement 2) needs.
 
-- Bit-exact storage integrity (manual energy recomputation on 600 random samples)
-- Format checks: `int8` configurations with values exactly `{-1, +1}`, PBC translation invariance on all spatial axes
-- Energy convention identical across dimensions: `H = -Σ_⟨ij⟩ s_i s_j`, each bond counted once
-- Per-block effective independent sample size > 100 across every block, median ≈ 950
-- Z₂ symmetry sampling in the paramagnetic phase
+Validation figures: [1D](reports/figures/validate_1d.png),
+[2D](reports/figures/validate_2d.png), [3D](reports/figures/validate_3d.png).
 
-Validation figures: [reports/figures/validate_1d.png](reports/figures/validate_1d.png), [reports/figures/validate_2d.png](reports/figures/validate_2d.png), [reports/figures/validate_3d.png](reports/figures/validate_3d.png).
+## Scope, honestly
+
+This is a machine-learning-for-physics methods contribution, validated on
+known ground truth — not new Ising physics, and not a claim to discover an
+unknown number. Its novelty is the *dimension* axis and the
+*upper-critical-dimension* framing: per-dimension phase classification is
+settled, cross-dimensional extrapolation with a falsifiable 4D test is not.
+The implicit promise of the method is for systems where the target *cannot*
+be cheaply simulated; 4D Ising is the proof-of-concept precisely because its
+answer is independently known.
 
 ## Code layout
 
 ```
-src/ising/        Simulation, storage. Per-dim Metropolis + Wolff kernels.
-scripts/          Runnable entry points: generation, validation, audit.
-data/             HDF5 datasets (1d, 2d, 3d + cross-check + smoke files).
+src/ising/        Monte Carlo simulation and HDF5 storage.
+scripts/          Generation, physics validation, cross-dimensional audit.
+data/             HDF5 datasets (1d, 2d, 3d, + cross-check and smoke files).
 reports/figures/  Validation figures.
-models/           Will hold CNN checkpoints (gitignored except .gitkeep).
-notebooks/        Validation/analysis notebooks.
+models/           CNN checkpoints (gitignored except .gitkeep).
+notebooks/        Validation and analysis notebooks.
 ```
 
 HDF5 schema:
 
 ```
 /dim_<d>/L_<L>/T_<T:.4f>/
-    configurations   (N, L, L, ..., L)  int8
-    energies         (N,)               float64
-    magnetizations   (N,)               float64
+    configurations   (N, L, ..., L)   int8, values in {-1, +1}
+    energies         (N,)             float64
+    magnetizations   (N,)             float64
     attrs: T, L, dim, seed, algorithm, n_thermalization, decorrelation, n_samples
-attrs at root: git_commit, created_utc, schema_version
+root attrs: git_commit, created_utc, schema_version
 ```
 
-Per-block seeds are derived from `SeedSequence([base, L, int(T*1e6)])` so any
-single block can be regenerated bit-exactly without rerunning the others.
+Per-block seeds derive from `SeedSequence([base, L, int(T*1e6)])`, so any single
+block can be regenerated bit-exactly without rerunning the others.
 
 ## Setup
 
@@ -82,13 +126,13 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-Python 3.10+ recommended. On a Jetson Nano, install the NVIDIA-prebuilt PyTorch
-wheel (ARM64 + CUDA 10.2) instead of the pinned `torch`.
+Python 3.10+. On a Jetson Nano, install the NVIDIA-prebuilt PyTorch wheel
+(ARM64 + CUDA 10.2) instead of the pinned `torch`.
 
-## Regenerating the datasets
+## Reproducing the datasets
 
-Each generation run is deterministic given the seed and produces the file
-exactly as committed.
+Generation is deterministic given the seed; each run reproduces the committed
+file exactly.
 
 ```pwsh
 .venv\Scripts\python scripts\generate_1d.py --out data\ising_1d.h5
@@ -98,9 +142,9 @@ exactly as committed.
 
 Wall time on a modern workstation: 1D ≈ 4 min, 2D ≈ 17 min, 3D ≈ 12 min.
 
-## Validation
+## Validating the physics
 
-Per-dim physics checks against exact or literature values:
+Per-dimension checks against exact or literature values:
 
 ```pwsh
 .venv\Scripts\python scripts\validate_physics_1d.py data\ising_1d.h5 --figure reports\figures\validate_1d.png
@@ -109,7 +153,7 @@ Per-dim physics checks against exact or literature values:
 ```
 
 Cross-dimensional consistency audit (schema, dtype, energy convention,
-effective sample size, Z₂ sampling, class balance, memory footprint):
+effective sample size, Z₂ sampling, class balance):
 
 ```pwsh
 .venv\Scripts\python scripts\audit_cross_dim.py
@@ -126,8 +170,10 @@ effective sample size, Z₂ sampling, class balance, memory footprint):
   model*. J. Phys. A 29, 5727.
 - Hasenbusch, M. (1999). *Improved estimators for the universal cumulant
   ratios*. J. Phys. A 32, 4851.
-- Lundow, P. H. & Markström, K. (2009). *Critical behaviour of the Ising
-  model on the 4D regular lattice*. Phys. Rev. E 80, 031104.
+- Lundow, P. H. & Markström, K. (2009). *Critical behaviour of the Ising model
+  on the 4D regular lattice*. Phys. Rev. E 80, 031104.
+- Mehta, P. & Schwab, D. J. (2014). *An exact mapping between the variational
+  renormalization group and deep learning*. arXiv:1410.3831.
 - Carrasquilla, J. & Melko, R. G. (2017). *Machine learning phases of matter*.
   Nature Physics 13, 431.
 - Newman, M. E. J. & Barkema, G. T. (1999). *Monte Carlo Methods in
