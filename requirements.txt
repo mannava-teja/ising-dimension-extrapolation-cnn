@@ -1,12 +1,13 @@
-# Phase 1: data generation + validation
+# Core: Monte Carlo data generation, validation, and CNN training
 numpy>=1.24
 scipy>=1.10
 numba>=0.58
 h5py>=3.9
 matplotlib>=3.7
 tqdm>=4.66
+torch>=2.0
 
-# Phase 3: validation notebook -- install when needed
+# Validation notebooks -- install when needed:
 #   pip install notebook ipykernel
-# Phase 4+: CNN training. On Jetson Nano use the NVIDIA-prebuilt wheel.
-#   pip install torch
+# On a Jetson Nano, install the NVIDIA-prebuilt torch wheel (ARM64 + CUDA 10.2)
+# instead of the PyPI torch above.
