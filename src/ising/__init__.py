@@ -7,6 +7,8 @@ from ising.metropolis_3d import simulate_3d_metropolis
 from ising.wolff_3d import simulate_3d_wolff
 from ising.metropolis_4d import simulate_4d_metropolis
 from ising.wolff_4d import simulate_4d_wolff
+from ising.metropolis_5d import simulate_5d_metropolis
+from ising.wolff_5d import simulate_5d_wolff
 
 __all__ = [
     "simulate_1d",
@@ -16,4 +18,6 @@ __all__ = [
     "simulate_3d_wolff",
     "simulate_4d_metropolis",
     "simulate_4d_wolff",
+    "simulate_5d_metropolis",
+    "simulate_5d_wolff",
 ]

@@ -36,10 +36,11 @@ from ising.storage import iter_blocks
 T_C = {1: 0.0,
        2: 2.0 / np.log(1.0 + np.sqrt(2.0)),  # 2.2691853...
        3: 4.5115,
-       4: 6.6803}
+       4: 6.6803,
+       5: 8.778}
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_H5 = {d: REPO_ROOT / "data" / f"ising_{d}d.h5" for d in (1, 2, 3, 4)}
+DEFAULT_H5 = {d: REPO_ROOT / "data" / f"ising_{d}d.h5" for d in (1, 2, 3, 4, 5)}
 
 
 class IsingDataset(Dataset):
@@ -60,10 +61,14 @@ class IsingDataset(Dataset):
         Apply random lattice-symmetry + Z2 augmentation in __getitem__.
     sizes : list[int] | None
         Optional filter on lattice size L (useful for fast smoke runs).
+    max_per_block : int | None
+        If set, use at most this many samples from each (L, T) block (the
+        train/val split is taken within that cap). Caps CPU training cost.
     """
 
     def __init__(self, dims, *, task="classify", split="all", val_frac=0.15,
-                 augment=False, sizes=None, h5_paths=None, seed=0):
+                 augment=False, sizes=None, max_per_block=None,
+                 h5_paths=None, seed=0):
         if task not in ("classify", "regress"):
             raise ValueError(f"unknown task: {task}")
         if split not in ("train", "val", "all"):
@@ -89,7 +94,10 @@ class IsingDataset(Dataset):
                 T = float(b["T"])
 
                 perm = split_rng.permutation(N)
-                n_val = int(round(val_frac * N))
+                if max_per_block is not None:      # cap samples used per block
+                    perm = perm[:max_per_block]
+                n_use = len(perm)
+                n_val = int(round(val_frac * n_use))
                 if split == "train":
                     sel = perm[n_val:]
                 elif split == "val":

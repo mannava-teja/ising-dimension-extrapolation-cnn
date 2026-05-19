@@ -44,8 +44,11 @@ from ising.cnn import IsingCNN                       # noqa: E402
 from ising.datasets import IsingDataset              # noqa: E402
 from ising.training import evaluate_per_block        # noqa: E402
 
-NU_LIT = {2: 1.0, 3: 0.6301, 4: 0.5}
-DIM_LABEL = {2: "2D", 3: "3D", 4: "4D"}
+# Literature correlation-length exponents. d >= 4 is mean-field (nu = 1/2);
+# at exactly d = 4 there are additional logarithmic corrections, at d = 5
+# the mean-field value is clean.
+NU_LIT = {2: 1.0, 3: 0.6301, 4: 0.5, 5: 0.5}
+DIM_LABEL = {2: "2D", 3: "3D", 4: "4D", 5: "5D"}
 
 
 def crossover_width(Ts, P, lo=0.25, hi=0.75):
@@ -82,7 +85,7 @@ def parse_args():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--checkpoint", type=Path,
                    default=REPO_ROOT / "models" / "cnn_train23.pt")
-    p.add_argument("--dims", type=int, nargs="+", default=[2, 3, 4])
+    p.add_argument("--dims", type=int, nargs="+", default=[2, 3, 4, 5])
     p.add_argument("--max-per-block", type=int, default=400,
                    help="Samples per block for the forward-pass evaluation.")
     p.add_argument("--out", type=Path,
@@ -175,7 +178,7 @@ def main():
 
     # ---- figure: naive (left) vs floor-corrected (right) ----
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(14, 6))
-    colors = {2: "C0", 3: "C1", 4: "C3"}
+    colors = {2: "C0", 3: "C1", 4: "C3", 5: "C4"}
     for d in usable:
         Ls = np.array([L for L, _ in results[d]], float)
         ws = np.array([w for _, w in results[d]], float)
