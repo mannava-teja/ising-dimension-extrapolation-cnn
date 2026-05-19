@@ -6,6 +6,7 @@ h5py>=3.9
 matplotlib>=3.7
 tqdm>=4.66
 torch>=2.0
+scikit-learn>=1.3
 
 # Validation notebooks -- install when needed:
 #   pip install notebook ipykernel
