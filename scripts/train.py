@@ -43,6 +43,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--task", choices=("classify", "regress"), default="classify")
     p.add_argument("--sizes", type=int, nargs="+", default=None,
                    help="Optional lattice-size filter (fast smoke runs).")
+    p.add_argument("--max-per-block", type=int, default=None,
+                   help="Cap samples used per (L, T) block; limits CPU cost.")
     p.add_argument("--epochs", type=int, default=30)
     p.add_argument("--batch-size", type=int, default=64)
     p.add_argument("--lr", type=float, default=1e-3)
@@ -72,9 +74,10 @@ def main() -> int:
     # --- datasets ---
     train_ds = IsingDataset(args.train, task=args.task, split="train",
                             augment=not args.no_augment, sizes=args.sizes,
-                            seed=args.seed)
+                            max_per_block=args.max_per_block, seed=args.seed)
     val_ds = IsingDataset(args.train, task=args.task, split="val",
-                          augment=False, sizes=args.sizes, seed=args.seed)
+                          augment=False, sizes=args.sizes,
+                          max_per_block=args.max_per_block, seed=args.seed)
     print(f"train samples: {len(train_ds):,}   val samples: {len(val_ds):,}")
 
     # --- model ---
