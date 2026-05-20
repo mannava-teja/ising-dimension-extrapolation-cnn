@@ -38,24 +38,39 @@ problem; an incorrect one is an informative limit on machine-learned physics.
 ## What the project measures
 
 Each measurement has a *known correct answer*, so the result is a verifiable
-yes/no rather than an unfalsifiable number:
+yes/no rather than an unfalsifiable number. The first three of these are
+quantitative; the fourth is a structural property of the trained network.
 
 1. **Extrapolated transition temperature** `T_c(4D)` — ground truth 6.68
-   (Lundow & Markström 2009).
-2. **Critical exponent `ν(4D)`**, extracted from how sharply the network's
-   order/disorder prediction crossover narrows with lattice size
-   (`width ∝ L^{-1/ν}`, an established finite-size-scaling technique) —
-   ground truth, mean-field 1/2, having only trained on `ν(2D)=1` and
-   `ν(3D)=0.63`.
-3. **Upper-critical-dimension signature** — whether the network's latent
-   representation flags *d* = 4 as the crossover where exponents stop running,
-   without being told.
-4. **Dimensional universality collapse** — whether critical configurations
-   from every dimension map onto a common manifold in the network's feature
-   space, a data-driven picture of universality.
+   (Lundow & Markström 2009). Compared *against trivial physics-statistic
+   baselines* (linear and quadratic fits of `T_c(d)`), not just against
+   literature: a 2-point linear fit already gets 1%, and the value of the
+   CNN extrapolation is the *gap* over that baseline.
+2. **Trend of the correlation-length exponent `ν(d)`** as `d` increases.
+   Literature: `ν(2D)=1, ν(3D)≈0.63, ν(4D)=1/2`. We extract an effective
+   `ν` from the network's classification-crossover width at each lattice
+   size and ask whether it descends across dimension. *Not* a precision
+   `ν(4D)` claim — the 1-loop Wilson-Fisher ε-expansion already gives
+   `ν(4D)=1/2` exactly, for free, so the paper does not try to beat that.
+   The defensible statement is qualitative: "the network's effective `ν`
+   decreases with `d` toward the mean-field value".
+3. **Upper-critical-dimension signature**, made sharp by `d=5`. Above the
+   upper critical dimension exponents *freeze* at mean-field. If the network
+   gives `ν(5D) ≈ ν(4D) ≈ 1/2` — a flat plateau, not a continued descent —
+   it has reproduced the freezing.
+4. **The transfer mechanism: a rotating decision axis.** *Not* universality
+   collapse (the data actually rules that out: configurations from different
+   dimensions form *segregated* clusters in feature space, with
+   cross-dimension nearest-neighbour mixing ≈ 0). What the data does show
+   is that the ordered→disordered direction within each dimension's cluster
+   rotates *smoothly* with `d`: cos(2D, 3D) = 0.82, cos(3D, 4D) = 0.70,
+   cos(2D, 4D) = 0.37. The shared decision axis between adjacent
+   dimensions is what transfers; that rotation mechanistically explains
+   the staged result in #1.
 
 The 4D dataset is generated, validated against literature, and then **sealed
 as a held-out test set** — it is never used to train or tune the network.
+5D is held-out too.
 
 ## Datasets
 
