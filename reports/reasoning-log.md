@@ -181,21 +181,36 @@ resolution. The monotone improvement is the core result.
 **Lesson.** A staged/controlled design turns a single number into a *trend*,
 which is far more convincing than one lucky extrapolation.
 
-## 15. Measurement #2 — the naive exponent fit failed, then was diagnosed
+## 15. Measurement #2 — the naive exponent fit failed, then was diagnosed (and downgraded after critique)
 
 **Reasoning.** Extract the correlation-length exponent `nu` from the
 finite-size scaling of the network's classification-crossover width:
 `width ~ L^(-1/nu)`.
 
-**Outcome — wrong, then understood.** The naive fit gave `nu` ~2x too large.
-Diagnosed cause: the network classifies individual finite samples with a
-smooth decision function, so its crossover cannot sharpen below an intrinsic
-*resolution floor* `c ~ 0.055`. With `width = a L^(-1/nu) + c`, the corrected
-exponents track the dimensional trend.
+**Outcome — wrong, then partially understood.** The naive fit gave `nu` ~2x
+too large. Diagnosed cause: the network classifies individual finite samples
+with a smooth decision function, so its crossover cannot sharpen below an
+intrinsic *resolution floor* `c`. With `width = a L^(-1/nu) + c` and `c`
+fitted by a global scan to minimise total residual, `c = 0.055` and the
+corrected exponents track the dimensional trend (2D 0.81, 3D 0.67, 4D 0.57
+vs literature 1.0 / 0.63 / 0.50).
 
-**Lesson.** A classifier's decision-boundary width is *not* the physical
-correlation length — it carries an instrument resolution. A failed measurement
-that is cleanly diagnosed is itself a result.
+**Honest follow-up after external critique.** The floor `c = 0.055` is a
+post-hoc one-parameter fit, not derived from first principles. The 1-loop
+Wilson-Fisher epsilon-expansion gives `nu(4D) = 1/2` *exactly* for free
+(since epsilon = 0 at d = 4); the CNN's 0.57 is therefore *worse* than the
+trivial physics baseline at d = 4. The defensible content of #2 is not the
+numerical `nu(4D)` value but the qualitative trend that the network's
+effective `nu` decreases with `d` -- which holds *also in the naive
+(uncorrected) fits* (2.08 -> 0.98 -> 0.62, monotonic). The trend is the
+result; the floor correction is a presentation aid, not a load-bearing
+claim.
+
+**Lesson.** A classifier's decision-boundary width is not the physical
+correlation length -- it carries an instrument resolution. Cleanly diagnosing
+the failure was useful, but presenting the corrected number as a precision
+claim was overclaiming. The version that survives external scrutiny is
+qualitative.
 
 ## 16. Measurement #4 — wrong hypothesis, better finding
 
@@ -271,3 +286,46 @@ the four advertised measurements (#2's precision and #4's framing) were
 overclaiming what the data supports; that was hard to see from inside the
 project. Always invite an outside read before believing your own
 conclusions.
+
+## 19. The 5D ν measurement — transfer horizon sets in earlier than hoped
+
+**Reasoning.** The hoped-for sharp test of measurement #3 was: train on
+2D+3D, evaluate on both held-out 4D *and* held-out 5D; if `nu(5D) ≈ nu(4D)`
+(a flat plateau, not continued descent), the network has reproduced
+exponent-freezing above the upper critical dimension.
+
+**Outcome — not sharply testable with the Stage B model.** Re-running
+`measure_exponents.py` on the Stage B (trained 2D+3D) checkpoint at d=5:
+
+  L = 4:  width *undefined* (the network's P(disordered) never spans 0.25-0.75
+          over the temperature range tested)
+  L = 6:  width *undefined* (same)
+  L = 8:  width = 3.42  (an order of magnitude larger than 4D's largest)
+
+Only one lattice has a measurable width, so the finite-size-scaling fit
+cannot be done. The "is nu(5D) frozen at 1/2" question cannot be answered
+from this checkpoint -- not because the answer is "no", but because the
+network's *classifier itself* breaks down at d = 5.
+
+**The interpretation -- and why this is consistent with #4's rotating axis.**
+Measurement #4 found that the ordered-to-disordered decision axis rotates
+smoothly with dimension: cos(2D,3D) = 0.82, cos(3D,4D) = 0.70,
+cos(2D,4D) = 0.37. Extrapolating that rotation, cos(3D, 5D) is presumably
+~0.4 and cos(2D, 5D) considerably less. The shared head, optimised against
+the 2D+3D axes, then has too little overlap with the 5D axis to produce a
+clean order/disorder crossover at small L. The transfer mechanism (the
+rotating decision axis from #4) has a natural *horizon*: it works to
+adjacent dimensions and degrades with distance.
+
+**The sharp test that would still work.** Reframe the experiment so d=5 is
+the held-out test and d=4 enters the training set. The network would then
+have a decision axis cos(4D, 5D) ~ 0.7+ by extension of the pattern, the
+classifier would work at d=5, and nu(5D) vs nu(4D) could be cleanly
+compared. That breaks the current "4D is held out" rule but is a one-line
+change in which dimension is the test target.
+
+**Lesson.** A failure mode of an extrapolation method is part of the
+result, not a missing measurement. Reporting the transfer horizon ("works
+to one dimension away; breaks down beyond") is as informative as a
+positive plateau would have been. And the breakdown is *consistent with*
+the rotating-axis mechanism -- one finding explains the other.
