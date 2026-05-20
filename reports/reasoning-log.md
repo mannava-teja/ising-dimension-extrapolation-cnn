@@ -212,3 +212,62 @@ mechanistically explains the staged `T_c` result.
 **Lesson.** When the naive hypothesis fails, the refined question often reveals
 the real mechanism. "No collapse, but a smoothly rotating decision rule" is a
 more honest and more interesting finding than a clean collapse would have been.
+
+## 17. The 5D extension — a second held-out dimension
+
+**Reasoning.** With only `d = 4` as the held-out target, measurement #3 (the
+upper-critical-dimension signature) was qualitative — the network's
+`nu(2D)`, `nu(3D)`, `nu(4D)` descended toward `1/2`, but that is what a
+generic smooth-extrapolation would predict too. A second held-out dimension
+above the upper critical dimension turns it into a sharp test: in Ising,
+exponents *freeze* for `d ≥ 4`, so `nu(5D)` should equal `nu(4D) = 1/2`. The
+network reproducing that flat plateau (rather than continuing to descend) is
+a falsifiable signature.
+
+**Outcome.** Simulators, generator, and validator extended to 5D. T_c(5D)
+from Binder crossings: 8.768, 8.762 vs literature 8.778 (0.1-0.2% off). The
+5D HDF5 file is 194 MB -- over GitHub's 100 MB per-file limit -- so the
+dataset is regeneration-only via the deterministic script. The `nu(5D)`
+measurement was still running at the session boundary; result lands in the
+follow-up.
+
+**Lesson.** A *second* held-out point above the upper critical dimension
+costs little extra (the simulator extends mechanically) and changes the
+character of the claim from "the trend goes the right way" to "the trend
+*saturates* exactly where the theory says it should".
+
+## 18. External critique — what's missing for a paper
+
+**Context.** A second independent review of the work
+identified the gaps separating "impressive prototype on one unreplicated
+number" from "defensible workshop methods paper".
+
+**The six gaps.**
+  1. **No error bars.** Every reported number comes from a single training
+     seed. Without multi-seed reruns, we cannot tell signal from luck.
+  2. **No baselines.** A two-point linear fit through `T_c(2D)` and
+     `T_c(3D)` predicts `T_c(4D) ~ 6.75` (within 1%) without any neural
+     network. The paper needs to show the CNN *adds value* over trivial
+     physics-statistic extrapolation.
+  3. **Measurement #2's `c = 0.055` floor is a post-hoc fitted constant**,
+     not derived. Either derive it or downgrade the precise `nu` numbers
+     to qualitative trend statements (which hold even with the *uncorrected*
+     fits).
+  4. **Measurement #4 was advertised as "universality collapse" but the
+     data shows the opposite** — dimension-segregated blobs in feature
+     space. The genuine result (the rotating decision axis) should be the
+     headline, not a recovery move.
+  5. **4D finite-size scaling rests on three lattices** with logarithmic
+     corrections in the mix. A credible fit needs `L = 10, 12` and a GPU.
+  6. **No `train123` ablation** to test whether more *training* dimensions
+     help, with 1D as a transition-free control.
+
+**Outcome.** Right on all counts. The README now has a "Path to publication"
+section enumerating these explicitly, and the autonomous work queue
+addresses items 1, 2, 3, 4 and a baseline of item 6 (item 5 needs GPU).
+
+**Lesson.** A second reviewer's read is genuinely worth the cost. Two of
+the four advertised measurements (#2's precision and #4's framing) were
+overclaiming what the data supports; that was hard to see from inside the
+project. Always invite an outside read before believing your own
+conclusions.

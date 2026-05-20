@@ -93,6 +93,56 @@ The implicit promise of the method is for systems where the target *cannot*
 be cheaply simulated; 4D Ising is the proof-of-concept precisely because its
 answer is independently known.
 
+In its current state the project is a **rigorous prototype, not a finished
+paper**. A workshop-paper-tier methods contribution (ML for physical
+sciences / NeurIPS-workshop level, not *Nature Physics*) is realistic — but
+it needs the hardening listed below first.
+
+## Path to publication — known gaps and how to close them
+
+External review identified six items that separate "impressive prototype on
+one unreplicated number" from "defensible methods paper":
+
+1. **Multi-seed runs with error bars.** Every reported number (T_c = 6.676,
+   the decision-axis cosines 0.82 / 0.70 / 0.37, ν ≈ 0.57) is from a *single*
+   training seed. Without error bars, none of them are individually
+   trustworthy. Plan: 3–5 seeds × Stage B and aggregate.
+2. **Physics-statistic baselines.** A two-point linear fit through
+   T_c(2D) = 2.27 and T_c(3D) = 4.51 already predicts T_c(4D) ≈ 6.75
+   (within 1%). The CNN gets 0.06%, but the *gap* over a trivial baseline
+   is what the paper has to defend. Same applies to ν via the ε-expansion.
+   Plan: `scripts/baselines.py` runs the trivial extrapolations and a single
+   figure shows CNN vs baselines vs literature.
+3. **Measurement #2 hardening.** The "resolution floor" `c = 0.055` is a
+   single-parameter post-hoc fit chosen to minimise residual. Either it is
+   derived from first principles (network smoothness × sample fluctuation
+   scale) or the precise `ν(4D) ≈ 0.57` claim is downgraded to "exponents
+   trend toward mean-field" (which is true even with the *naive* uncorrected
+   fits).
+4. **Measurement #4 reframed.** The data does not show universality
+   collapse in the feature space (it shows the opposite — dimension-
+   segregated blobs). What it *does* show is that the ordered→disordered
+   decision axis rotates smoothly with dimension (`cos(2D,3D) = 0.82`,
+   `cos(3D,4D) = 0.70`, `cos(2D,4D) = 0.37`). That rotation mechanistically
+   explains the staged improvement — and it should be the headline of #4,
+   not a consolation finding.
+5. **Bigger 4D lattices + a `train123` ablation.** Finite-size scaling at
+   4D presently rests on three lattices `{4, 6, 8}`; with the upper-critical
+   logarithmic corrections present, three points is not enough for a
+   credible fit. A GPU run targeting `L ∈ {6, 8, 10, 12}` is the proper
+   resolution. Likewise, an ablation training on 1D + 2D + 3D (with 1D as
+   a transition-free control) tests whether *more* training dimensions help
+   or whether 1D's absence of a transition adds noise.
+6. **5D as a second held-out dimension.** Already generated and validated
+   (Binder crossings at 8.768 / 8.762 vs literature 8.778, 0.1–0.2% off).
+   If `ν(5D) ≈ ν(4D) ≈ 1/2` from the network — i.e. exponents *freeze* for
+   `d ≥ 4` — that directly demonstrates the upper critical dimension,
+   replacing the qualitative #3 claim with a sharp one.
+
+These are weeks of focused work, not new infrastructure. The architecture
+is sound; what is missing is uncertainty quantification, baselines, and
+honest reframing.
+
 ## Code layout
 
 ```
