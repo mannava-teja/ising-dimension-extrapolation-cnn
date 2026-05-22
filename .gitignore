@@ -230,3 +230,7 @@ models/*
 data/_scratch/
 reports/*.pdf
 
+# The 5D Ising dataset is 194 MB -- over GitHub's 100 MB per-file limit --
+# so it is generated locally by scripts/generate_5d.py and never committed.
+/data/ising_5d.h5
+
