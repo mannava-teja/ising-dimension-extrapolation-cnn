@@ -138,6 +138,7 @@ def main() -> int:
         "train_dims": list(args.train),
         "eval_dims": eval_dims,
         "sizes": args.sizes,
+        "seed": args.seed,
         "history": [r for r in history.epochs],
         "best_epoch": history.best_epoch,
         "eval_report": eval_report,
