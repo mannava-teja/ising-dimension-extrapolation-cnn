@@ -40,7 +40,7 @@ back every time a block needs regenerating.
 ## 3. The Windows long-path install failure
 
 **Reasoning.** Installed the full `requirements.txt` (including jupyter) into a
-venv inside the deep `sandbox/worktrees/...` path.
+venv inside a deeply nested sandbox path.
 
 **Outcome — wrong.** `jupyterlab` unpacks extension files with ~330-char paths;
 Windows' default `MAX_PATH` is 260. The install died.
@@ -253,7 +253,7 @@ character of the claim from "the trend goes the right way" to "the trend
 
 ## 18. External critique — what's missing for a paper
 
-**Context.** A second independent review of the work
+**Context.** A second, independent end-to-end review of the work
 identified the gaps separating "impressive prototype on one unreplicated
 number" from "defensible workshop methods paper".
 
