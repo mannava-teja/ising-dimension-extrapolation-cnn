@@ -86,7 +86,16 @@ class IsingDataset(Dataset):
             path = Path(h5_paths[d])
             if not path.exists():
                 raise FileNotFoundError(f"dim {d} dataset missing: {path}")
-            for b in iter_blocks(path, dim=d):
+            # Auto-include the extended 4D file (L=10,12) for FSS hardening
+            # when present. The original ising_4d.h5 stays small + committable;
+            # the extended file is gitignored and regenerable.
+            paths_to_read = [path]
+            if d == 4:
+                ext = REPO_ROOT / "data" / "ising_4d_extended.h5"
+                if ext.exists() and ext != path:
+                    paths_to_read.append(ext)
+            for p in paths_to_read:
+              for b in iter_blocks(p, dim=d):
                 if sizes is not None and b["L"] not in sizes:
                     continue
                 cfg = b["configurations"]          # (N, *spatial) int8
