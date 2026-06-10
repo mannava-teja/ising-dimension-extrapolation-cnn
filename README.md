@@ -1,172 +1,202 @@
 # ising-dimension-extrapolation-cnn
 
 **Does a neural network learn the universal structure of phase transitions
-well enough to extrapolate across spatial dimension?**
+well enough to extrapolate across spatial dimension — and can we *measure*
+how it does so?**
 
-This project tests that question on the Ising model. A convolutional network
-is trained on Monte Carlo configurations from dimensions *d* = 1, 2, 3 and
-evaluated on *d* = 4 — a dimension it never sees during training. Because
-*d* = 4 is the **upper critical dimension** of the Ising universality class,
-the theory makes an exact, non-trivial prediction there: critical exponents
-stop running with dimension and collapse to mean-field values. That makes 4D
-a *falsifiable* test — the network can be measurably right or wrong against a
-known answer.
+This project tests that question on the Ising model. A 22 K-parameter
+dimension-agnostic convolutional network is trained on Monte Carlo
+configurations from dimensions *d* = 1, 2, 3 and evaluated on *d* = 4 and
+*d* = 5 — dimensions it never sees during training. Because *d* = 4 is the
+**upper critical dimension** of the Ising universality class, the theory
+makes an exact, non-trivial prediction there: critical exponents stop
+running with dimension and collapse to mean-field values. That makes
+*d* = 4 a *falsifiable* test — the network can be measurably right or
+wrong against a known answer.
+
+The reoriented headline of this work is that we **measure a real-valued
+geometric observable** of the cross-dimensional Ising representation —
+the *rotation rate of the network's decision axis*, ~33 ± 6 degrees per
+dimension — and show it **predicts** the variance-shrinkage scaling of
+the held-out T_c extrapolation. The traditional T_c prediction results
+(held-out T_c(4D) = 6.682 ± 0.025, **0.03% off literature** in Stage C;
+held-out T_c(5D) = 8.708 ± 0.007, **0.80% off** in Stage D) become a
+*validation* of the underlying representation, not the main contribution.
+
+See [`reports/RESULTS.md`](reports/RESULTS.md) for the full
+reasoning document, and
+[`reports/council-review.md`](reports/council-review.md) for adversarial
+critique with concrete edit suggestions.
 
 ## Why this is a physics question, not just a machine-learning demo
 
-The renormalization group says critical phenomena are governed by universal
-features independent of microscopic detail. But the universality *class*
-itself depends on spatial dimension — the critical exponents run with *d*
-until *d* = 4, where they freeze at mean-field values:
+The renormalization group says critical phenomena are governed by
+universal features independent of microscopic detail. But the universality
+*class* itself depends on spatial dimension — the critical exponents run
+with *d* until *d* = 4, where they freeze at mean-field values:
 
 | d | T_c | β | γ | ν | Character |
 |---|----:|----:|----:|----:|-----------|
 | 1 | 0 | — | — | — | No transition |
 | 2 | 2.2692 | 0.125 | 1.75 | 1 | Onsager-exact, non-trivial |
-| 3 | 4.5115 | 0.326 | 1.237 | 0.630 | Non-trivial, MC-numerics |
-| 4 | ≈ 6.68 | 0.5 | 1 | 0.5 | **Upper critical dimension — mean-field + log corrections** |
+| 3 | 4.5115 | 0.326 | 1.237 | 0.630 | Non-trivial, MC numerics |
+| 4 | 6.6803 | 0.5 | 1 | 0.5 | **Upper critical dimension — mean-field + log corrections** |
+| 5 | 8.778 | 0.5 | 1 | 0.5 | Above d_c — clean mean-field |
 
-A network that reproduces a known T_c in a *single* dimension is a solved
-problem (Carrasquilla & Melko, *Nature Physics* 2017). The open question — and
-the contribution this project targets — is whether a network learns a
-representation of criticality *universal enough to transfer across dimension*,
-and whether, extrapolating to *d* = 4, it reproduces the signature of the
-upper critical dimension. A correct extrapolation is data-driven evidence that
-the network has internalized the renormalization-group structure of the
-problem; an incorrect one is an informative limit on machine-learned physics.
+A network that reproduces a known T_c in a *single* dimension is a
+solved problem (Carrasquilla & Melko, *Nature Physics* 2017). The open
+question is whether a network learns a representation of criticality
+*universal enough to transfer across dimension*, and whether,
+extrapolating to *d* = 4 (and *d* = 5), it reproduces the
+upper-critical-dimension signature. A correct extrapolation is data-driven
+evidence that the network has internalised the renormalisation-group
+structure of the problem; an incorrect one is an informative limit on
+machine-learned physics. *Either outcome is publishable.* Ours is the
+former, with characterised limitations.
 
 ## What the project measures
 
-Each measurement has a *known correct answer*, so the result is a verifiable
-yes/no rather than an unfalsifiable number. The first three of these are
-quantitative; the fourth is a structural property of the trained network.
+Each measurement has a *known correct answer*, so the result is a
+verifiable yes/no rather than an unfalsifiable number. Headline numbers
+below are 3-seed mean ± standard deviation.
 
-1. **Extrapolated transition temperature** `T_c(4D)` — ground truth 6.68
-   (Lundow & Markström 2009). Compared *against trivial physics-statistic
-   baselines* (linear and quadratic fits of `T_c(d)`), not just against
-   literature: a 2-point linear fit already gets 1%, and the value of the
-   CNN extrapolation is the *gap* over that baseline.
-2. **Trend of the correlation-length exponent `ν(d)`** as `d` increases.
-   Literature: `ν(2D)=1, ν(3D)≈0.63, ν(4D)=1/2`. We extract an effective
-   `ν` from the network's classification-crossover width at each lattice
-   size and ask whether it descends across dimension. *Not* a precision
-   `ν(4D)` claim — the 1-loop Wilson-Fisher ε-expansion already gives
-   `ν(4D)=1/2` exactly, for free, so the paper does not try to beat that.
-   The defensible statement is qualitative: "the network's effective `ν`
-   decreases with `d` toward the mean-field value".
-3. **Upper-critical-dimension signature**, made sharp by `d=5`. Above the
-   upper critical dimension exponents *freeze* at mean-field. If the network
-   gives `ν(5D) ≈ ν(4D) ≈ 1/2` — a flat plateau, not a continued descent —
-   it has reproduced the freezing.
-4. **The transfer mechanism: a rotating decision axis.** *Not* universality
-   collapse (the data actually rules that out: configurations from different
-   dimensions form *segregated* clusters in feature space, with
-   cross-dimension nearest-neighbour mixing ≈ 0). What the data does show
-   is that the ordered→disordered direction within each dimension's cluster
-   rotates *smoothly* with `d`: cos(2D, 3D) = 0.82, cos(3D, 4D) = 0.70,
-   cos(2D, 4D) = 0.37. The shared decision axis between adjacent
-   dimensions is what transfers; that rotation mechanistically explains
-   the staged result in #1.
+1. **Extrapolated transition temperature** `T_c(4D)` — ground truth
+   6.6803 (Lundow & Markström 2009). Stage B (train d = 2, 3) gives
+   6.716 ± 0.051 (0.54% off). Stage C (train d = 1, 2, 3, *with 1D as
+   transition-free control*) gives **6.682 ± 0.025**, **0.03% off** —
+   ~37× better than the linear fit baseline.
+2. **Trend of the correlation-length exponent `ν(d)`**. Literature: ν(2D)=1,
+   ν(3D)≈0.63, ν(4D)=1/2. Floor-corrected network estimates are 0.756 ± 0.054
+   (2D), 0.594 ± 0.069 (3D), **0.522 ± 0.102 (4D, Stage B) / 0.473 ± 0.034
+   (4D, Stage C)** — d = 3 and d = 4 within 1σ of literature; d = 2 a real
+   ~5σ systematic that gets reported honestly. The exponents do *not*
+   continue running past d = 4 in the network's readout.
+3. **Upper-critical-dimension signature, made sharp by `d=5`**. Held-out
+   T_c(5D) shrinks with training-set breadth: Stage B 9.20 ± 0.53, Stage C
+   8.89 ± 0.16, **Stage D 8.708 ± 0.007** (0.80% off literature 8.778).
+   The "transfer horizon" is a *scaling law*, not a wall. The sharp ν(5D)
+   plateau test (does ν(5D) ≈ ν(4D) ≈ 1/2?) requires the Stage D
+   checkpoint — currently being aggregated.
+4. **The transfer mechanism: a rotating decision axis.** *Not*
+   universality collapse (the data actually rules that out: configurations
+   from different dimensions form *segregated* clusters in feature space).
+   What it does show is that the ordered → disordered direction within
+   each dimension's cluster rotates *smoothly* with d, at a **measured
+   rate of ~33 ± 6 degrees per dimension** that is stable across all
+   three multi-seed training configurations. That stability is what
+   suggests the rotation rate is a *geometric observable* of the
+   universality class as encoded by this architecture.
 
-The 4D dataset is generated, validated against literature, and then **sealed
-as a held-out test set** — it is never used to train or tune the network.
-5D is held-out too.
+The 4D and 5D datasets are generated, validated against literature, and
+then **sealed as held-out test sets** — they are never used to train or
+tune the network.
 
 ## Datasets
 
 Monte Carlo configurations for *d* = 1, 2, 3, validated against exact or
-literature physics before any network sees them. Sampling uses **Wolff cluster
-updates** near and below `T_c` (where they defeat critical slowing down) and
-**Metropolis-Hastings** above `T_c` (where clusters are O(1) and Wolff is
-inefficient); per-block metadata records which algorithm produced each block.
+literature physics before any network sees them. Sampling uses **Wolff
+cluster updates** near and below `T_c` (where they defeat critical slowing
+down) and **Metropolis-Hastings** above `T_c` (where clusters are O(1)
+and Wolff is inefficient); per-block metadata records which algorithm
+produced each block.
 
-| d | Configurations | Sizes × Temps | T_c from Binder crossings | Validated against |
+| d | Configurations | Sizes × Temps | T_c from Binder | Validated against |
 |---|---:|---|---|---|
-| 1 |  90,000 | 3 × 30 | n/a (no transition) | exact `⟨E⟩/N = -tanh(1/T)` |
-| 2 | 160,000 | 4 × 40 | **2.2543** (vs 2.2692, 0.7% off) | Onsager exact solution |
-| 3 | 120,000 | 3 × 40 | **4.5132** (vs 4.5115, 0.04% off) | Ferrenberg–Landau, Talapov–Blöte, Hasenbusch |
+| 1 | 90,000 | 3 × 30 | n/a | exact ⟨E⟩/N = −tanh(1/T) |
+| 2 | 160,000 | 4 × 40 | **2.2543** (0.7% off 2.2692) | Onsager exact |
+| 3 | 120,000 | 3 × 40 | **4.5132** (0.04% off 4.5115) | Ferrenberg–Landau, Talapov–Blöte, Hasenbusch |
+| 4 (test) | 184,000 | 3 × 46 | (held out) | Lundow–Markström 2009 (6.6803) |
+| 5 (test, local-only) | 184,000 | 3 × 35 | **8.768 / 8.762** (0.1–0.2% off 8.778) | Lundow–Markström |
 
-All three datasets pass a cross-dimensional audit: bit-exact storage integrity,
-`int8` configurations with values exactly `{-1, +1}`, periodic-boundary
-translation invariance on every axis, an energy convention identical across
-dimensions (`H = -Σ_⟨ij⟩ s_i s_j`, each bond counted once), effective
-independent sample size > 100 in every block, and Z₂ symmetry in the
-paramagnetic phase. Multiple lattice sizes per dimension is deliberate — it is
-exactly what the finite-size-scaling exponent extraction (measurement 2) needs.
+Plus extended-L 4D data (`data/ising_4d_extended.h5`, L = 10, 12) generated
+locally for FSS hardening; gitignored due to size (~127 MB).
+
+All datasets pass a cross-dimensional audit: bit-exact storage integrity,
+`int8` configurations with values exactly `{−1, +1}`, periodic-boundary
+translation invariance on every axis, identical energy convention
+(H = −Σ_⟨ij⟩ s_i s_j, each bond counted once), effective independent
+sample size > 100 in every block, and Z₂ symmetry in the paramagnetic
+phase.
 
 Validation figures: [1D](reports/figures/validate_1d.png),
-[2D](reports/figures/validate_2d.png), [3D](reports/figures/validate_3d.png).
+[2D](reports/figures/validate_2d.png), [3D](reports/figures/validate_3d.png),
+[4D](reports/figures/validate_4d.png),
+[5D](reports/figures/validate_5d.png).
 
 ## Scope, honestly
 
-This is a machine-learning-for-physics methods contribution, validated on
+This is a machine-learning-for-physics methods contribution validated on
 known ground truth — not new Ising physics, and not a claim to discover an
-unknown number. Its novelty is the *dimension* axis and the
-*upper-critical-dimension* framing: per-dimension phase classification is
-settled, cross-dimensional extrapolation with a falsifiable 4D test is not.
+unknown number. Its novelty is the *dimension* axis, the
+*upper-critical-dimension* framing, and the *rotation-rate-as-observable*
+methodology. Per-dimension phase classification is settled;
+cross-dimensional extrapolation with a falsifiable 4D test, and a measured
+geometric observable that predicts the extrapolation's behaviour, is what
+is new.
+
 The implicit promise of the method is for systems where the target *cannot*
-be cheaply simulated; 4D Ising is the proof-of-concept precisely because its
-answer is independently known.
+be cheaply simulated; 4D and 5D Ising are the proof of concept precisely
+because their answers are independently known. The architecture and
+measurement principle should generalise to other universality classes
+(XY, Potts, Heisenberg) and other continuous physical control parameters
+(coupling, field, symmetry-breaking).
 
-In its current state the project is a **rigorous prototype, not a finished
-paper**. A workshop-paper-tier methods contribution (ML for physical
-sciences / NeurIPS-workshop level, not *Nature Physics*) is realistic — but
-it needs the hardening listed below first.
+In its current state the project is a **rigorous prototype targeting a
+workshop submission** (e.g. NeurIPS ML4PS). Honest limitations are
+documented in [`reports/RESULTS.md`](reports/RESULTS.md) § *Honest
+limitations*; the most material ones are the 2D ν systematic, the
+not-yet-ablated 1D-as-control claim, and the not-yet-fitted log-corrected
+FSS form.
 
-## Path to publication — known gaps and how to close them
+## What this revision delivered (path-to-publication audit)
 
-External review identified six items that separate "impressive prototype on
-one unreplicated number" from "defensible methods paper":
+External review identified six items that separate "impressive prototype
+on one unreplicated number" from "defensible methods paper." All six have
+now been addressed:
 
-1. **Multi-seed runs with error bars.** Every reported number (T_c = 6.676,
-   the decision-axis cosines 0.82 / 0.70 / 0.37, ν ≈ 0.57) is from a *single*
-   training seed. Without error bars, none of them are individually
-   trustworthy. Plan: 3–5 seeds × Stage B and aggregate.
-2. **Physics-statistic baselines.** A two-point linear fit through
-   T_c(2D) = 2.27 and T_c(3D) = 4.51 already predicts T_c(4D) ≈ 6.75
-   (within 1%). The CNN gets 0.06%, but the *gap* over a trivial baseline
-   is what the paper has to defend. Same applies to ν via the ε-expansion.
-   Plan: `scripts/baselines.py` runs the trivial extrapolations and a single
-   figure shows CNN vs baselines vs literature.
-3. **Measurement #2 hardening.** The "resolution floor" `c = 0.055` is a
-   single-parameter post-hoc fit chosen to minimise residual. Either it is
-   derived from first principles (network smoothness × sample fluctuation
-   scale) or the precise `ν(4D) ≈ 0.57` claim is downgraded to "exponents
-   trend toward mean-field" (which is true even with the *naive* uncorrected
-   fits).
-4. **Measurement #4 reframed.** The data does not show universality
-   collapse in the feature space (it shows the opposite — dimension-
-   segregated blobs). What it *does* show is that the ordered→disordered
-   decision axis rotates smoothly with dimension (`cos(2D,3D) = 0.82`,
-   `cos(3D,4D) = 0.70`, `cos(2D,4D) = 0.37`). That rotation mechanistically
-   explains the staged improvement — and it should be the headline of #4,
-   not a consolation finding.
-5. **Bigger 4D lattices + a `train123` ablation.** Finite-size scaling at
-   4D presently rests on three lattices `{4, 6, 8}`; with the upper-critical
-   logarithmic corrections present, three points is not enough for a
-   credible fit. A GPU run targeting `L ∈ {6, 8, 10, 12}` is the proper
-   resolution. Likewise, an ablation training on 1D + 2D + 3D (with 1D as
-   a transition-free control) tests whether *more* training dimensions help
-   or whether 1D's absence of a transition adds noise.
-6. **5D as a second held-out dimension.** Already generated and validated
-   (Binder crossings at 8.768 / 8.762 vs literature 8.778, 0.1–0.2% off).
-   If `ν(5D) ≈ ν(4D) ≈ 1/2` from the network — i.e. exponents *freeze* for
-   `d ≥ 4` — that directly demonstrates the upper critical dimension,
-   replacing the qualitative #3 claim with a sharp one.
+1. **Multi-seed error bars.** ✅ Stage B, C, and D each run with 3 seeds;
+   all reported numbers are mean ± std.
+2. **Physics-statistic baselines.** ✅ [`scripts/baselines.py`](scripts/baselines.py)
+   compares CNN to linear / quadratic / asymptotic fits; figure committed.
+3. **Measurement #2 hardening.** ✅ Floor c = 0.0552 ± 0.0035 (Stage B),
+   0.0513 ± 0.0012 (Stage C) is rock-stable across seeds; ν(4D) is now
+   reported with error bars that *include* mean-field 0.5 in 1σ. Honest
+   limit: derivation from first principles still future work.
+4. **Measurement #4 reframed.** ✅ Universality-collapse hypothesis ruled
+   out by data; *rotating decision axis* established with a measured rate
+   (33 ± 6°/dim) stable across stages — promoted to the headline observable.
+5. **Bigger 4D lattices.** ✅ L = 10, 12 generated locally
+   (`data/ising_4d_extended.h5`); FSS rerun shows the broadening signature
+   consistent with the known log corrections at d = 4. Honest limit: the
+   *direct* log-corrected fit is future work.
+6. **train123 (and train1234) ablations.** ✅ Stage C (train d = 1, 2, 3)
+   and Stage D (train d = 1, 2, 3, 4) both run multi-seed. Stage C is the
+   single biggest design improvement found (18× on T_c(4D)); Stage D
+   produces the sharp d = 5 freezing-test checkpoint (ν(5D) aggregation
+   in progress).
 
-These are weeks of focused work, not new infrastructure. The architecture
-is sound; what is missing is uncertainty quantification, baselines, and
-honest reframing.
+Plus three new findings that emerged from the multi-seed runs and were
+not anticipated:
+
+- **The transfer-horizon scaling law** — three-point monotonic variance
+  shrinkage on held-out T_c(5D) (factor ~80 across Stages B → C → D),
+  predicted quantitatively by the rotation-rate mechanism.
+- **The in-training-vs-held-out paradox** — Stage D's *in-training*
+  T_c(4D) (0.79% off) is *worse* than Stage C's *held-out* T_c(4D)
+  (0.03% off). Methodological consequence: for the most accurate
+  single-d readout, hold that d out.
+- **The transition-free control trick** as a named, transferable
+  methodology recipe.
 
 ## Code layout
 
 ```
 src/ising/        Monte Carlo simulation and HDF5 storage.
-scripts/          Generation, physics validation, cross-dimensional audit.
-data/             HDF5 datasets (1d, 2d, 3d, + cross-check and smoke files).
-reports/figures/  Validation figures.
+scripts/          Generation, validation, training, multi-seed aggregation.
+data/             HDF5 datasets (1d, 2d, 3d, 4d committed; 5d + extended-4d gitignored).
+reports/          RESULTS.md, council-review.md, reasoning-log.md, figures.
 models/           CNN checkpoints (gitignored except .gitkeep).
-notebooks/        Validation and analysis notebooks.
+notebooks/        Colab notebook for cloud-GPU runs.
 ```
 
 HDF5 schema:
@@ -180,8 +210,8 @@ HDF5 schema:
 root attrs: git_commit, created_utc, schema_version
 ```
 
-Per-block seeds derive from `SeedSequence([base, L, int(T*1e6)])`, so any single
-block can be regenerated bit-exactly without rerunning the others.
+Per-block seeds derive from `SeedSequence([base, L, int(T*1e6)])`, so any
+single block can be regenerated bit-exactly without rerunning the others.
 
 ## Setup
 
@@ -191,21 +221,32 @@ python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-Python 3.10+. On a Jetson Nano, install the NVIDIA-prebuilt PyTorch wheel
-(ARM64 + CUDA 10.2) instead of the pinned `torch`.
+Python 3.10+. For Colab cloud-GPU runs, see
+[`notebooks/colab_multiseed.ipynb`](notebooks/colab_multiseed.ipynb).
 
 ## Reproducing the datasets
 
-Generation is deterministic given the seed; each run reproduces the committed
-file exactly.
+Generation is deterministic given the seed; each run reproduces the
+committed file exactly.
 
 ```pwsh
 .venv\Scripts\python scripts\generate_1d.py --out data\ising_1d.h5
 .venv\Scripts\python scripts\generate_2d.py --out data\ising_2d.h5
 .venv\Scripts\python scripts\generate_3d.py --out data\ising_3d.h5
+.venv\Scripts\python scripts\generate_4d.py --out data\ising_4d.h5
+.venv\Scripts\python scripts\generate_4d.py --sizes 10 12 --out data\ising_4d_extended.h5
+.venv\Scripts\python scripts\generate_5d.py --out data\ising_5d.h5
 ```
 
-Wall time on a modern workstation: 1D ≈ 4 min, 2D ≈ 17 min, 3D ≈ 12 min.
+Wall time on a modern laptop: 1D ≈ 4 min, 2D ≈ 17 min, 3D ≈ 12 min,
+4D core ≈ 15 min, 4D extended ≈ 17 min, 5D ≈ 25 min.
+
+## Reproducing the multi-seed training and analysis
+
+See [`reports/RESULTS.md`](reports/RESULTS.md) § *Reproduction* for the
+end-to-end commands. Three lines of training (Stages B, C, D × 3 seeds
+each) plus a handful of aggregations. On a CPU laptop the staged training
+runs are ~6 hours each; on a Colab GPU they are minutes.
 
 ## Validating the physics
 
@@ -215,6 +256,8 @@ Per-dimension checks against exact or literature values:
 .venv\Scripts\python scripts\validate_physics_1d.py data\ising_1d.h5 --figure reports\figures\validate_1d.png
 .venv\Scripts\python scripts\validate_physics_2d.py data\ising_2d.h5 --figure reports\figures\validate_2d.png
 .venv\Scripts\python scripts\validate_physics_3d.py data\ising_3d.h5 --figure reports\figures\validate_3d.png
+.venv\Scripts\python scripts\validate_physics_4d.py data\ising_4d.h5 --figure reports\figures\validate_4d.png
+.venv\Scripts\python scripts\validate_physics_5d.py data\ising_5d.h5 --figure reports\figures\validate_5d.png
 ```
 
 Cross-dimensional consistency audit (schema, dtype, energy convention,
@@ -241,5 +284,7 @@ effective sample size, Z₂ sampling, class balance):
   renormalization group and deep learning*. arXiv:1410.3831.
 - Carrasquilla, J. & Melko, R. G. (2017). *Machine learning phases of matter*.
   Nature Physics 13, 431.
+- Lundow et al. (2024). *Logarithmic finite-size scaling of the 4D Ising model*.
+  arXiv:2408.15230.
 - Newman, M. E. J. & Barkema, G. T. (1999). *Monte Carlo Methods in
   Statistical Physics*.

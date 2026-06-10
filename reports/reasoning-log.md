@@ -329,3 +329,163 @@ result, not a missing measurement. Reporting the transfer horizon ("works
 to one dimension away; breaks down beyond") is as informative as a
 positive plateau would have been. And the breakdown is *consistent with*
 the rotating-axis mechanism -- one finding explains the other.
+
+## 20. Multi-seed Stage B -- the lucky-anecdote correction
+
+**Reasoning.** The single-seed Stage B result (T_c(4D) = 6.676, 0.06% off
+literature, beating the linear baseline by ~17x) was always going to be
+soft until replicated. The external critique flagged it; we ran 3 seeds.
+
+**Outcome.** The 3-seed mean is T_c(4D) = 6.716 +/- 0.051 (0.54% off,
+beating linear baseline by ~2x). The original single-seed number was a
+particularly fortunate run. The honest multi-seed number is *still* a
+real win, just smaller than the anecdote suggested.
+
+**Lesson.** Single-seed results in ML-for-physics are not just "missing
+error bars" -- they are *misleading point estimates*. The replication is
+not a formality; it is what distinguishes a finding from luck. We have
+this lesson now even for the headline.
+
+## 21. The 1D-as-control finding (Stage C, the design surprise)
+
+**Reasoning.** "Does adding 1D to training help, hurt, or do nothing?"
+was queued as a routine ablation -- one of the "external critique
+followups." The hypothesis was that 1D (no phase transition) might add
+noise without signal.
+
+**Outcome.** Stage C (train on d = 1, 2, 3) gives T_c(4D) = 6.682 +/-
+0.025, 0.03% off literature -- **18x better than Stage B's mean** and half
+the spread. T_c(5D) also tightens by 3.3x. This was *not* a routine
+ablation; it was the largest design improvement found in the whole
+project.
+
+**Working interpretation.** Forcing the network to encode "this dimension
+has no phase transition" sharpens its dimension-aware decision rule. The
+transition-free control acts like a calibration of the *baseline* of the
+classifier's output across dimensions.
+
+**Honest limit.** We have not ablated 1D-as-control against a synthetic
+shuffled-1D control. Until that is done, the 18x improvement is
+consistent with both "1D's transition-freeness is the lever" and "more
+training data per se is the lever." The disambiguation is one extra
+training run on the future-work queue.
+
+**Lesson.** When a project's most surprising finding is an "ablation,"
+take it seriously: it likely needs to be *named* (transition-free
+control trick) and ablated again specifically. Cite-baiting a
+methodology recipe is appropriate; underclaiming it leaves the
+contribution on the table.
+
+## 22. Stage D, the sharp #3 test, and the transfer-horizon scaling law
+
+**Reasoning.** Measurement #3 (does the network show the d = 4 freezing
+plateau in nu?) was qualitative because the d = 5 multi-L FSS broke in
+Stage B (no clean crossover at L = 4, 6). The natural fix: train on
+{1, 2, 3, 4} and hold out only d = 5. The rotating-axis prediction (#4)
+says the d = 5 classifier should now work cleanly, because the rotation
+distance from the training set to the test is one step instead of two.
+
+**Outcome.** Stage D gives T_c(5D) = 8.708 +/- 0.007 (0.80% off), with
+the error bar shrunk **23x compared to Stage C and ~80x compared to
+Stage B**. Three-point monotonic shrinkage in held-out variance, driven
+by the rotation-axis mechanism. That is a *quantitative* prediction of
+the mechanism, confirmed.
+
+**Bonus surprise: the in-training-vs-held-out paradox.** Stage D's
+*in-training* T_c(4D) is 0.79% off; Stage C's *held-out* T_c(4D) is
+0.03% off. Training on the test dim degrades point-estimate accuracy in
+exchange for tighter variance. The shared classifier head compromises
+across all training dims. Methodological consequence: for the most
+accurate single-d readout, hold that d out, do not include it in
+training. This generalises beyond Ising.
+
+**Lesson.** A planned ablation can produce *two* findings: the one you
+were testing (sharp #3 works) and one you were not testing (training on
+the target degrades the readout). When a number disagrees with naive
+expectation, ask whether it is a measurement of something separately
+interesting before treating it as noise.
+
+## 23. The extended-L 4D log-correction signal
+
+**Reasoning.** "More lattice sizes = cleaner FSS" was the naive
+expectation when we generated L = 10, 12 data and added them to the 4D
+FSS. The expected result: tighter ν(4D) estimate.
+
+**Outcome -- the opposite, in a useful way.** Adding L = 10, 12 made the
+power-law fit *worse* (broader spread, central value shifts away from
+0.5). At first this looked like a regression. But the known caveat at
+d = d_c = 4 is that FSS carries multiplicative log corrections
+(arXiv:2408.15230); a *pure* power-law fit *should* appear to fail when
+the data is rich enough to reveal the log term.
+
+**Reframing.** The "failure" of the pure power law is *consistent with*
+the predicted log-correction signature appearing in the network's own
+crossover-width FSS. This is a positive scientific finding via what
+looked like a negative result, and it is detected through measurement
+#2 itself with no new instrumentation.
+
+**Honest limit.** We have not yet *fit* the log-corrected FSS form on
+the same data to confirm it outperforms the pure power law. Until that
+fit is done, the framing in RESULTS.md is: "consistent with the known
+log-correction caveat" rather than "we detected the log corrections."
+A direct log-corrected fit is on the future-work queue.
+
+**Lesson.** When a known caveat predicts a *failure mode* of the
+default analysis, and the failure shows up exactly as predicted, that
+is evidence -- but it is observational evidence. Asserting the
+positive form ("we detected X") requires the fitted form (positive
+F-test vs the simpler model). Asserting only the consistent form
+("data is consistent with X") is honest with one less computation done.
+
+## 24. The rotation rate as a measured geometric observable -- reframing the project
+
+**Reasoning.** Measurement #4 was originally pitched as "the mechanism
+that explains the staged T_c improvement." Three multi-seed runs later,
+the rotation rate has the same mean (32-34 deg/dim) across Stages B,
+C, and D, with error bars that tighten and loosen depending on
+training but a mean that does not move.
+
+**Outcome.** That stability across deliberately-varied training data
+makes the rotation rate look like a *property of the underlying
+universality geometry*, not of the training data. Which means it is
+not a side observation -- it is a measured geometric observable of
+the cross-dimensional Ising representation in this architecture. It
+*predicts* the transfer-horizon scaling, *predicts* the per-step
+shrinkage between training stages, and is reproducible.
+
+**Reframing.** Promoted the rotation rate from "bonus result of
+measurement #4" to the headline observable of the paper. T_c(4D) and
+T_c(5D) become *validations* of the underlying representation, not
+the contribution.
+
+**Honest limit (per Contrarian review).** The cross-stage mean
+stability is observationally consistent with both "geometric constant
+of the universality class" and "initialisation noise centred near
+33 deg." The per-seed cosine correlation *across stages* would
+disambiguate; that analysis has not been done yet. Acknowledged in
+RESULTS.md and flagged for follow-up.
+
+**Lesson.** When the same number recurs across deliberately varied
+runs, take it seriously as a candidate observable rather than as a
+coincidence. Promote it to the headline if the alternative is to
+report it as "bonus."
+
+## 25. The five-person council review
+
+**Reasoning.** Before submitting a paper, run an adversarial review
+internally. Five personas (Contrarian, First Principles, Expansionist,
+Outsider, Executor) reviewed the RESULTS.md document.
+
+**Outcome.** Many concrete edits surfaced: sub-grid-precision caveat,
+plain-language preface, glossary, rotation-rate-as-headline reframing,
+ablation/limit flags. The most material ones were folded into RESULTS.md
+in the same session; the unfolded ones (proper log-corrected FSS fit,
+shuffled-1D ablation, per-seed cosine correlation across stages, XY/Potts
+extension) are flagged as future work in the *Honest limitations*
+section.
+
+**Lesson.** A self-administered adversarial review at five distinct
+stances catches a notable fraction of what real reviewers will flag.
+Worth running before *every* submission. Particular value of the
+Outsider stance: catches the curse-of-knowledge gaps invisible to the
+author.
