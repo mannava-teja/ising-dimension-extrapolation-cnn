@@ -75,8 +75,10 @@ below are 3-seed mean ± standard deviation.
    T_c(5D) shrinks with training-set breadth: Stage B 9.20 ± 0.53, Stage C
    8.89 ± 0.16, **Stage D 8.708 ± 0.007** (0.80% off literature 8.778).
    The "transfer horizon" is a *scaling law*, not a wall. The sharp ν(5D)
-   plateau test (does ν(5D) ≈ ν(4D) ≈ 1/2?) requires the Stage D
-   checkpoint — currently being aggregated.
+   plateau test on the Stage D checkpoints came back negative
+   (ν(5D) = 0.400 ± 0.021, continued descent rather than freezing) — read
+   as a small-lattice limitation (L ≤ 8 in 5D), with larger 5D lattices
+   as the decisive follow-up. See RESULTS.md Measurement #3.
 4. **The transfer mechanism: a rotating decision axis.** *Not*
    universality collapse (the data actually rules that out: configurations
    from different dimensions form *segregated* clusters in feature space).

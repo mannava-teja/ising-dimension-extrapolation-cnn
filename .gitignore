@@ -234,3 +234,7 @@ reports/*.pdf
 # so it is generated locally by scripts/generate_5d.py and never committed.
 /data/ising_5d.h5
 
+# The extended 4D dataset (L=10,12 for FSS hardening) is also large
+# (regenerable from scripts/generate_4d.py --sizes 10 12) and stays local.
+/data/ising_4d_extended.h5
+

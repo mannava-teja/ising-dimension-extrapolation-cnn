@@ -76,8 +76,11 @@ numbers:
 3. **The upper-critical-dimension freezing is detected.** Floor-corrected
    ν(4D) = 0.522 ± 0.102 (Stage B) and **0.473 ± 0.034** (Stage C) — both
    consistent with mean-field 1/2 within 1σ. Stage D's ν(5D) — the sharp
-   *plateau* version of the freezing test — is _(pending: Stage D ν
-   aggregation in flight)_.
+   *plateau* version of the freezing test — came back **negative**: naive
+   ν(5D) = 0.400 ± 0.021 vs ν(4D) = 0.494 ± 0.017, i.e. continued descent
+   rather than freezing. We read this as a small-L limitation (the 5D FSS
+   spans only L ∈ {4, 6, 8}), not a refutation of freezing — see
+   Measurement #3.
 
 Plus the rotation-rate observable (32.3 ± 5.1, 33.0 ± 5.8, 34.3 ± 1.7 deg
 per dimension across Stages D, B, C respectively) is the *measured*
@@ -187,7 +190,8 @@ What the network gives:
 
 - Floor-corrected ν(4D) = 0.522 ± 0.102 (Stage B), 0.473 ± 0.034 (Stage C)
 - Both **within 1σ** of the mean-field 0.5
-- Stage D ν(5D) _(pending — this is the sharp plateau test)_
+- Stage D ν(5D) = 0.400 ± 0.021 — the sharp plateau test comes back
+  negative at the available lattice sizes (see Measurement #3)
 
 Naive ν(4D) at Stage C is 0.521 ± 0.037 — within 1σ of mean-field
 *without* any floor correction. The exponents stopped running in the
@@ -361,9 +365,15 @@ matters at 4D.
 
 | Stage | naive ν(4D) | floor-corrected ν(4D) | interpretation |
 |---|---|---|---|
-| B | 0.705 ± 0.173 | 0.621 ± 0.180 | log-correction signature |
-| C | _(pending)_ | _(pending)_ | _(pending)_ |
-| D | _(pending)_ | _(pending)_ | _(pending)_ |
+| B | 0.705 ± 0.173 | 0.621 ± 0.180 | log-correction broadening |
+| C | 0.618 ± 0.059 | (floor fit → c ≈ 0 at ext-L for 2 of 3 seeds) | same broadening |
+| D | 0.494 ± 0.017 *(in-training)* | — | in-training d = 4 readout stays near 0.5 |
+
+Note the pattern: the *held-out* stages (B, C) show the extended-L
+broadening away from 0.5, while Stage D — where d = 4 is in training —
+stays pinned near 0.5 even with L = 10, 12 included. Consistent with the
+broadening being a property of the *FSS readout* (where the log
+corrections live), not of the representation.
 
 See § "What naive intuition would have predicted, item 4" for the
 log-correction reframing and its honest limit (proper log-corrected fit
@@ -393,12 +403,26 @@ original single-seed framing:
    shrinking variance as training adds dims. The "wall" is a continuous
    scaling.
 
-2. *Stage D's classifier (trained 1, 2, 3, 4) gives a clean multi-L FSS
-   at d = 5* — the rotation distance from training to test is one step
-   instead of two. _(pending: Stage D ν aggregation in flight; if the
-   floor-corrected ν(5D) is consistent with 1/2 within error bars, the
-   upper-critical-dim freezing is **directly demonstrated by the network
-   for the first time in this project**.)_
+2. *Stage D's classifier (trained 1, 2, 3, 4) does give a clean multi-L
+   FSS at d = 5* — all three lattice sizes produce usable crossovers, as
+   the rotation-axis mechanism predicted. The result of the sharp test
+   (3 seeds, naive fits; per-seed floors disagreed so naive is the
+   comparable number):
+
+   | quantity | Stage D, 3 seeds | mean-field |
+   |---|---|---|
+   | ν(4D) (in-training) | 0.494 ± 0.017 | 0.500 ✓ |
+   | ν(5D) (held-out) | **0.400 ± 0.021** | 0.500 ✗ (~5σ below) |
+
+   **The plateau is not reproduced**: the network's effective exponent
+   continues descending past d_c instead of freezing. Our reading is a
+   *small-lattice limitation*, not a refutation of freezing: the d = 5
+   FSS spans only L ∈ {4, 6, 8} (4⁵ = 1024 spins is a very small system),
+   where finite-size corrections to the effective exponent are large and
+   negative-going. The honest statement: **at the lattice sizes
+   available, the network's d = 5 readout does not distinguish "freezing
+   plus strong finite-size corrections" from "no freezing."** Larger 5D
+   lattices (L = 10, 12) are the decisive follow-up.
 
 3. *The previous "transfer horizon as wall" claim is recharacterised* as
    a scaling law on prediction variance, with quantitative dependence on
@@ -615,9 +639,12 @@ follow-up XY or Potts experiment is the natural next validation.
 ### "But ν(5D) freezing isn't sharply demonstrated."
 
 Stage B's d = 5 multi-L FSS broke at small L. The sharp plateau test
-ν(5D) ≈ ν(4D) ≈ 1/2 requires the Stage D checkpoint (currently being
-aggregated). _(pending: Stage D ν aggregation will close or formally
-open this question.)_ Either outcome is a real result.
+ν(5D) ≈ ν(4D) ≈ 1/2 was run on the Stage D checkpoints and came back
+negative: ν(5D) = 0.400 ± 0.021 — continued descent, not a plateau. At
+the available lattice sizes (L ≤ 8 in 5D) this does not distinguish
+"freezing plus strong finite-size corrections" from "no freezing"; the
+decisive follow-up is larger 5D lattices. A characterized boundary of
+the method, reported as such.
 
 ---
 
