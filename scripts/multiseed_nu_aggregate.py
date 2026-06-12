@@ -27,12 +27,13 @@ from measure_exponents import (crossover_width, load_model,   # noqa: E402
                                NU_LIT, DIM_LABEL)
 
 
-def widths_for_checkpoint(model, dims, max_per_block, device):
+def widths_for_checkpoint(model, dims, max_per_block, device, ext4d=False):
     """Return {dim: [(L, width), ...]} for one model (forward passes only)."""
     results = {}
     for d in dims:
         ds = IsingDataset([d], task="classify", split="all", augment=False,
-                          max_per_block=max_per_block)
+                          max_per_block=max_per_block,
+                          include_extended_4d=ext4d)
         rows = evaluate_per_block(model, ds, task="classify", device=device)
         by_L = {}
         for r in rows:
@@ -90,6 +91,8 @@ def parse_args():
                    help="Dimensions to extract nu for. d=5 often has too few "
                         "usable lattice sizes (transfer horizon) to fit.")
     p.add_argument("--max-per-block", type=int, default=400)
+    p.add_argument("--include-extended", action="store_true",
+                   help="also use data/ising_4d_extended.h5 (L=10,12) for d=4")
     return p.parse_args()
 
 
@@ -111,7 +114,8 @@ def main():
         model, ck = load_model(p)
         seed = ck.get("seed", -1)
         seeds.append(seed)
-        results = widths_for_checkpoint(model, args.dims, args.max_per_block, device)
+        results = widths_for_checkpoint(model, args.dims, args.max_per_block,
+                                        device, ext4d=args.include_extended)
         usable = [d for d in args.dims if len(results[d]) >= 2]
         if len(usable) < 1:
             print(f"  {p.name}: no dimension has >=2 usable lattice sizes; skipped")

@@ -63,9 +63,10 @@ def main() -> int:
     eval_dims = args.eval if args.eval is not None else list(args.train)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    if 4 in args.train:
-        print("WARNING: 4D is in --train. It is meant to be a held-out test "
-              "set; training on it invalidates the extrapolation claim.",
+    held_out = [d for d in eval_dims if d not in args.train]
+    if not held_out:
+        print("WARNING: every eval dimension is also in --train; nothing is "
+              "held out, so this run makes no extrapolation claim.",
               file=sys.stderr)
 
     print(f"device: {device}")

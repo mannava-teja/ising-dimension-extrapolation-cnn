@@ -68,7 +68,7 @@ class IsingDataset(Dataset):
 
     def __init__(self, dims, *, task="classify", split="all", val_frac=0.15,
                  augment=False, sizes=None, max_per_block=None,
-                 h5_paths=None, seed=0):
+                 h5_paths=None, seed=0, include_extended_4d=False):
         if task not in ("classify", "regress"):
             raise ValueError(f"unknown task: {task}")
         if split not in ("train", "val", "all"):
@@ -86,46 +86,48 @@ class IsingDataset(Dataset):
             path = Path(h5_paths[d])
             if not path.exists():
                 raise FileNotFoundError(f"dim {d} dataset missing: {path}")
-            # Auto-include the extended 4D file (L=10,12) for FSS hardening
-            # when present. The original ising_4d.h5 stays small + committable;
-            # the extended file is gitignored and regenerable.
             paths_to_read = [path]
-            if d == 4:
+            if d == 4 and include_extended_4d:
+                # extra L=10,12 blocks for the FSS checks; kept in a separate
+                # gitignored file so ising_4d.h5 stays under GitHub's limit
                 ext = REPO_ROOT / "data" / "ising_4d_extended.h5"
-                if ext.exists() and ext != path:
-                    paths_to_read.append(ext)
+                if not ext.exists():
+                    raise FileNotFoundError(
+                        f"include_extended_4d=True but {ext} is missing "
+                        "(regenerate: scripts/generate_4d.py --sizes 10 12)")
+                paths_to_read.append(ext)
             for p in paths_to_read:
-              for b in iter_blocks(p, dim=d):
-                if sizes is not None and b["L"] not in sizes:
-                    continue
-                cfg = b["configurations"]          # (N, *spatial) int8
-                N = cfg.shape[0]
-                T = float(b["T"])
+                for b in iter_blocks(p, dim=d):
+                    if sizes is not None and b["L"] not in sizes:
+                        continue
+                    cfg = b["configurations"]          # (N, *spatial) int8
+                    N = cfg.shape[0]
+                    T = float(b["T"])
 
-                perm = split_rng.permutation(N)
-                if max_per_block is not None:      # cap samples used per block
-                    perm = perm[:max_per_block]
-                n_use = len(perm)
-                n_val = int(round(val_frac * n_use))
-                if split == "train":
-                    sel = perm[n_val:]
-                elif split == "val":
-                    sel = perm[:n_val]
-                else:
-                    sel = perm
+                    perm = split_rng.permutation(N)
+                    if max_per_block is not None:  # cap samples used per block
+                        perm = perm[:max_per_block]
+                    n_use = len(perm)
+                    n_val = int(round(val_frac * n_use))
+                    if split == "train":
+                        sel = perm[n_val:]
+                    elif split == "val":
+                        sel = perm[:n_val]
+                    else:
+                        sel = perm
 
-                if task == "classify":
-                    cls = 1 if T > T_C[d] else 0
-                    labels = np.full(len(sel), cls, dtype=np.int64)
-                else:
-                    labels = np.full(len(sel), T, dtype=np.float32)
+                    if task == "classify":
+                        cls = 1 if T > T_C[d] else 0
+                        labels = np.full(len(sel), cls, dtype=np.int64)
+                    else:
+                        labels = np.full(len(sel), T, dtype=np.float32)
 
-                self.buckets.append({
-                    "dim": d, "L": b["L"], "T": T,
-                    "configs": cfg[sel], "labels": labels,
-                })
-                bi = len(self.buckets) - 1
-                self._index.extend((bi, si) for si in range(len(sel)))
+                    self.buckets.append({
+                        "dim": d, "L": b["L"], "T": T,
+                        "configs": cfg[sel], "labels": labels,
+                    })
+                    bi = len(self.buckets) - 1
+                    self._index.extend((bi, si) for si in range(len(sel)))
 
         if not self._index:
             raise ValueError("dataset is empty -- check dims / sizes filters")

@@ -157,6 +157,7 @@ python scripts/rotation_rate.py          --pattern "cnn_train23_seed*.pt" --dims
 ```
 
 (same aggregate commands with the other two prefixes; add --dims 2 3 4 5
-for the stage D nu run). Each 3-seed training run is ~6h on a laptop
+for the stage D nu run, and --include-extended to the nu script for the
+L=10,12 fits). Each 3-seed training run is ~6h on a laptop
 CPU. Checkpoints and the 5D / extended-4D h5 files are gitignored but
 regenerable from scripts/generate_*.py.
