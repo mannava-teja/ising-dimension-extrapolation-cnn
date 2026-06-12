@@ -1,15 +1,9 @@
-"""Aggregate multi-seed checkpoints, produce T_c estimates with error bars.
+"""Read T_c estimates out of every checkpoint matching a glob and report
+mean +/- std per dimension, plus the error-bar figure.
 
-For every checkpoint matching `models/cnn_train23*.pt`, read its eval_report
-and extract the T_c estimate per held-out dimension. Report mean +/- std
-across seeds. Regenerate the extrapolation figure with error bars.
+    python scripts/multiseed_aggregate.py --pattern "cnn_train23_seed*.pt"
 
-Robust to partial completion: if seeds 1 and 2 are done but seed 3 is still
-training, this script aggregates the two completed seeds and notes that the
-third is missing.
-
-Usage:
-    python scripts/multiseed_aggregate.py
+Works with however many seeds have finished so far.
 """
 
 from __future__ import annotations

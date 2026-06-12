@@ -1,26 +1,11 @@
-"""Multi-seed training driver (stage-agnostic, laptop or cloud).
+"""Run train.py for several seeds in sequence, one checkpoint each.
 
-Runs the same training config for several seeds in sequence, writing one
-checkpoint per seed. Used for both Stage B (train 2,3) and the Stage C
-ablation (train 1,2,3), and re-usable for any future staged config.
+e.g. python scripts/run_multiseed.py --train 2 3 --eval 3 4 5 --seeds 1 2 3 \
+         --out-prefix cnn_train23
 
-On Windows it holds a system-required execution state for the duration so a
-laptop cannot hibernate mid-run (the failure mode that killed an earlier
-attempt); on Linux/Colab that call is a harmless no-op. Each seed is
-independent: if seed N fails, seeds N+1 still run.
-
-Examples:
-    # Stage B, 3 seeds, eval on held-out 4 (+5 if data present)
-    python scripts/run_multiseed.py --train 2 3 --eval 3 4 5 --seeds 1 2 3 \
-        --out-prefix cnn_train23
-
-    # Stage C ablation
-    python scripts/run_multiseed.py --train 1 2 3 --eval 3 4 5 --seeds 1 2 3 \
-        --out-prefix cnn_train123
-
-    # Skip 5D (no 5D dataset available)
-    python scripts/run_multiseed.py --train 2 3 --eval 3 4 --seeds 1 2 3 \
-        --out-prefix cnn_train23
+Keeps Windows awake for the duration (a laptop hibernating mid-run killed
+an earlier attempt). Seeds are independent, a failed one doesn't stop the
+rest.
 """
 
 from __future__ import annotations

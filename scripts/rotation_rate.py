@@ -1,27 +1,9 @@
-"""Quantify the decision-axis rotation rate (measurement #4, bonus).
+"""Fit a rotation rate to the decision-axis cosines from latent_analysis.py.
 
-Measurement #4 (scripts/latent_analysis.py) found that the ordered->disordered
-"decision axis" in the network's 64-d feature space rotates smoothly with
-spatial dimension: cos(2D,3D)=0.82, cos(3D,4D)=0.70, cos(2D,4D)=0.37. That
-script reports the three raw cosines. This script turns them into an explicit
-model: the angle theta between two dimensions' decision axes grows roughly
-linearly with the dimension gap |Delta d|, so a single "rotation rate"
-(degrees per dimension) summarises the whole transfer mechanism -- and, run
-over multiple seeds, comes with an error bar.
+For each checkpoint: get each dimension's ordered->disordered axis in
+feature space, convert pairwise cosines to angles, fit
+theta = rate * |delta d| through the origin. Aggregate over seeds.
 
-Method (per checkpoint, identical feature pipeline to latent_analysis.py):
-  - extract pooled 64-d features for dims 2,3,4 at one representative L each;
-  - standardise features jointly, then in each dimension's cluster take the
-    direction from the ordered centroid to the disordered centroid (its
-    decision axis);
-  - cosines -> angles theta_ij = arccos(cos_ij);
-  - fit theta = rate * |Delta d| through the origin (theta=0 at Delta d=0);
-    `rate` is the rotation rate in degrees per dimension.
-
-Aggregated across seed checkpoints: cosines, angles, and rate as mean +/- std.
-
-Usage:
-    python scripts/rotation_rate.py
     python scripts/rotation_rate.py --pattern "cnn_train23_seed*.pt" --dims 2 3 4
 """
 

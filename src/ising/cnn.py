@@ -1,27 +1,13 @@
 """Dimension-agnostic CNN for Ising configurations.
 
-The whole project hinges on one architectural property: **the same trained
-weights must process 1D, 2D, 3D, and 4D lattices**. Only then is "train on
-d=1,2,3, test on d=4" a meaningful experiment -- a per-dimension encoder would
-need a 4D encoder whose weights were never trained, producing garbage.
-
-How this network achieves dimension-agnosticism:
-
-  - A "convolution" here is a per-site linear map of (a) the spin itself and
-    (b) the sum of its nearest neighbors. The neighbor sum is taken with
-    `torch.roll`, which on a periodic lattice IS circular padding -- it
-    matches the Ising periodic boundary conditions exactly, for free.
-  - The neighbor sum runs over *however many spatial axes the input has*.
-    1D: 2 neighbors. 2D: 4. 3D: 6. 4D: 8. The weights never change.
-  - Reflection symmetry of the Ising Hamiltonian is baked in: roll(+1) and
-    roll(-1) are summed before the linear map, so the network cannot tell
-    +axis from -axis (as it shouldn't).
-  - Global average pooling over the spatial axes makes the network agnostic
-    to both lattice size L and dimensionality d -- the pooled feature vector
-    is always (N, C) regardless of the input shape.
-
-Parameter count is therefore a single number, independent of dimension
-(~22K with the defaults). That is the point.
+The same weights have to run on 1D through 5D input, otherwise "train low-d,
+test on held-out high-d" doesn't work (a per-dimension encoder would be
+untrained at the test dimension). So the "convolution" is a per-site linear
+map of the spin plus the sum of its nearest neighbours, with neighbours
+gathered by torch.roll (= circular padding on a periodic lattice). The
+neighbour sum just loops over however many spatial axes the input has, and
+global average pooling makes the feature vector shape independent of L and d.
+~22K parameters with the defaults.
 """
 
 from __future__ import annotations

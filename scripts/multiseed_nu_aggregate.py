@@ -1,25 +1,10 @@
-"""Aggregate the correlation-length exponent nu across multi-seed checkpoints.
+"""Same nu extraction as measure_exponents.py, but over every checkpoint
+matching a glob, reporting mean +/- std per dimension.
 
-Measurement #2 (scripts/measure_exponents.py) extracts an effective nu from the
-finite-size scaling of the network's classification crossover, for a single
-checkpoint. This script runs that same extraction for every seed checkpoint
-matching a glob and reports mean +/- std of nu per dimension -- the error bars
-the external critique asked for on the exponent trend.
+    python scripts/multiseed_nu_aggregate.py --pattern "cnn_train23_seed*.pt" --dims 2 3 4
 
-For each checkpoint we compute, per dimension:
-  - naive nu               from   width ~ L^(-1/nu)
-  - floor-corrected nu     from   width = a L^(-1/nu) + c   (c fit per checkpoint,
-                                   shared across that checkpoint's dimensions,
-                                   exactly as measure_exponents.py does it)
-
-then aggregate each across seeds. The methodology is identical to the
-single-seed script; only the per-seed loop + aggregation is new. The leaf
-helpers (crossover_width, load_model, NU_LIT, DIM_LABEL) are imported from
-measure_exponents so there is a single source of truth for them.
-
-Usage:
-    python scripts/multiseed_nu_aggregate.py
-    python scripts/multiseed_nu_aggregate.py --pattern "cnn_train23_seed*.pt" --dims 2 3 4 5
+Imports the fit helpers from measure_exponents so the method stays in one
+place.
 """
 
 from __future__ import annotations
